@@ -22,8 +22,18 @@ export async function getPageMangapark(
         url = `${BASE_URL}/search?word=${query}&page=${pageNumber}`
         idSelector = `search-list`
     }
+    await page.goto(url, { waitUntil: 'domcontentloaded' })
+    await page.setRequestInterception(true)
 
-    await page.goto(url)
+    page.on('request', request => {
+        if (!request.url().includes(
+            `div#${idSelector} div.col div a, ` +
+            `div#${idSelector} div.col a, ` +
+            `div#${idSelector} div.col a img`
+        )) request.abort()
+        else request.continue();
+    });
+
     await page.waitForSelector(`div#${idSelector} div.col`)
 
     const subjectList = await page.$$(`div#${idSelector} div.col`)
@@ -46,7 +56,23 @@ export async function getMangaMangapark(
     page: Page,
     url: string,
 ) {
-    await page.goto(url)
+    await page.goto(url, { waitUntil: 'domcontentloaded' })
+    await page.setRequestInterception(true)
+    page.on('request', request => {
+        if (!request.url().includes(
+            `div.row.detail-set div img, ` +
+            `b.text-color-orange-500, ` +
+            `.attr-item, ` +
+            `.limit-html, ` +
+            `.title-set .item-title a, ` +
+            `span span, span u, ` +
+            `.episode-item a`
+        )) request.abort()
+        else {
+            request.continue()
+        }
+    })
+
     await page.waitForSelector('div.row.detail-set')
 
     const thumbnail = await page.$eval('div.row.detail-set div img', img => img.src)
@@ -104,8 +130,17 @@ export async function getChapterMangapark(
     url: string,
 ) {
 
-    page.setCacheEnabled(false)
-    await page.goto(url)
+    await page.goto(url, { waitUntil: 'domcontentloaded' })
+    await page.setRequestInterception(true)
+
+    page.on('request', request => {
+        if (!request.url().includes(
+            `div#viewer .item, ` +
+            `div#viewer .item, ` +
+            `#viewer .item img`
+        )) request.abort()
+        else request.continue();
+    })
     await page.waitForSelector('div#viewer .item')
 
     await page.select('select#select-load', 'f')

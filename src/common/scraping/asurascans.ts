@@ -23,7 +23,17 @@ export async function getPageAsurascans(
         url = `${BASE_URL}/page/${pageNumber}/?s=${query}`
     }
 
-    await page.goto(url)
+    await page.goto(url, { waitUntil: 'domcontentloaded' })
+    await page.setRequestInterception(true)
+
+    page.on('request', request => {
+        if (!request.url().includes(
+            selector + ' a, ' +
+            selector + ' image'
+        )) request.abort()
+        else request.continue();
+    });
+
     await page.waitForSelector('.bixbox')
 
     const data: Array<MangaModel> = []
@@ -44,7 +54,23 @@ export async function getMangaAsurascans(
     page: Page,
     url: string,
 ) {
-    await page.goto(url)
+    await page.goto(url, { waitUntil: 'domcontentloaded' })
+    await page.setRequestInterception(true)
+
+    page.on('request', request => {
+        if (!request.url().includes(
+            '.bixbox.animefull .bigcover img,' +
+            '.bixbox.animefull .bigcontent .num,' +
+            '.bixbox.animefull .bigcontent .thumb img,' +
+            '.bixbox.animefull .bigcontent .thumb .wd-full span,' +
+            '.bixbox.animefull .bigcontent .thumb .wd-full .entry-content,' +
+            '.bixbox.animefull .bigcontent .thumb .wd-full .mgen,' +
+            '.bixbox.animefull .bigcontent .thumb .infox h1,' +
+            '.bixbox.bxcl.epcheck .eplister .clstyle li'
+        )) request.abort()
+        else request.continue();
+    });
+
     await page.waitForSelector('div.bixbox.animefull')
     await page.waitForSelector('div.bixbox.bxcl.epcheck')
 
@@ -131,7 +157,14 @@ export async function getChapterAsurascans(
     page: Page,
     url: string,
 ) {
-    await page.goto(url)
+    await page.goto(url, { waitUntil: 'domcontentloaded' })
+    await page.setRequestInterception(true);
+
+    page.on('request', request => {
+        if (!request.url().includes('.rdminimal p img')) request.abort()
+        else request.continue();
+    });
+
     await page.waitForSelector('div#readerarea.rdminimal')
 
     const pages = await page.$$eval('.rdminimal p img', (elements) => {
