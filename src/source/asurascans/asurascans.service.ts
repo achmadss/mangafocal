@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { InjectBrowser } from 'nestjs-puppeteer';
-import { AsurascansSelector, getChapterAsurascans, getMangaAsurascans, getPageAsurascans } from 'src/common/scraping/asurascans';
 import { Browser } from "puppeteer"
+import { InjectBrowser } from 'src/common/puppeteer';
+import { AsurascansSelector, getChapterAsurascans, getMangaAsurascans, getPageAsurascans } from 'src/common/scraping';
 
 @Injectable()
 export class AsurascansService {
@@ -11,26 +11,57 @@ export class AsurascansService {
     ) { }
 
     async getPopular() {
-        const data = await getPageAsurascans(
-            this.browser, AsurascansSelector.POPULAR, 1
-        )
+        const page = await this.browser.newPage()
+        let data = {}
+        try {
+            data = await getPageAsurascans(
+                page, AsurascansSelector.POPULAR, null
+            )
+        } catch (error) {
+            console.error(error)
+        }
+        page.close()
         return { data: data }
     }
 
-    async getPage(pageNumber: number) {
-        const data = await getPageAsurascans(
-            this.browser, AsurascansSelector.LASTEST, pageNumber
-        )
+    async getLatest(
+        query: string,
+        pageNumber: number = 1
+    ) {
+        const page = await this.browser.newPage()
+        let data = {}
+        try {
+            data = await getPageAsurascans(
+                page, AsurascansSelector.LASTEST, query, pageNumber
+            )
+        } catch (error) {
+            console.error(error)
+        }
+        page.close()
         return { data: data }
     }
 
     async getManga(url: string) {
-        const data = await getMangaAsurascans(this.browser, url)
+        const page = await this.browser.newPage()
+        let data = {}
+        try {
+            data = await getMangaAsurascans(page, url)
+        } catch (error) {
+            console.error(error)
+        }
+        page.close()
         return data
     }
 
     async getChapter(url: string) {
-        const data = await getChapterAsurascans(this.browser, url)
+        const page = await this.browser.newPage()
+        let data = {}
+        try {
+            data = await getChapterAsurascans(page, url)
+        } catch (error) {
+            console.error(error)
+        }
+        page.close()
         return data
     }
 
