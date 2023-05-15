@@ -17,14 +17,16 @@ export async function getPageMangapark(
     pageNumber: number = 1,
 ) {
     let url = `${BASE_URL}/browse?sort=${type}&page=${pageNumber}`
-    if (!isEmptyOrSpaces(query)) url = `${BASE_URL}/search?word=${query}`
-
-    page.setCacheEnabled()
+    let idSelector = `subject-list`
+    if (!isEmptyOrSpaces(query)) {
+        url = `${BASE_URL}/search?word=${query}&page=${pageNumber}`
+        idSelector = `search-list`
+    }
 
     await page.goto(url)
-    await page.waitForSelector('div#subject-list div.col')
+    await page.waitForSelector(`div#${idSelector} div.col`)
 
-    const subjectList = await page.$$('div#subject-list div.col')
+    const subjectList = await page.$$(`div#${idSelector} div.col`)
 
     const data: Array<MangaModel> = []
 
