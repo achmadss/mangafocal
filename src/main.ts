@@ -19,7 +19,13 @@ async function bootstrap() {
     const document = SwaggerModule.createDocument(app, config)
     SwaggerModule.setup('api', app, document)
 
-    const validationPipeOpt = { whitelist: true }
+    const validationPipeOpt = {
+        whitelist: true,
+        transform: true,
+        transformOptions: {
+            enableImplicitConversion: true,
+        },
+    }
     app.useGlobalPipes(new ValidationPipe(validationPipeOpt))
 
     await app.listen(3000);
