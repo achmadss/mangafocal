@@ -1,4 +1,8 @@
-import { Browser } from "puppeteer"
+import { Page } from "puppeteer"
+import { ChapterModel, MangaDetailModel, MangaModel, PageModel } from "./model/ScrapingModel"
+import { isEmptyOrSpaces } from "../StringUtils"
+
+const BASE_URL = `https://www.asurascans.com`
 
 export enum AsurascansSelector {
     // homepage
@@ -7,36 +11,35 @@ export enum AsurascansSelector {
 }
 
 export async function getPageAsurascans(
-    browser: Browser,
+    page: Page,
     selector: AsurascansSelector,
-    pageNumber: number | 1,
+    query: string,
+    pageNumber: number = 1,
 ) {
-    const url = `https://www.asurascans.com/page/${pageNumber}/`
-    const data: Array<{ title: string, img: string, url: string }> = []
+    let url = `${BASE_URL}/page/${pageNumber}/`
+    if (!isEmptyOrSpaces(query)) url = `${BASE_URL}/page/${pageNumber}/?s=${query}`
 
-    const page = await browser.newPage()
     await page.goto(url)
     await page.waitForSelector('.bixbox')
+
+    const data: Array<MangaModel> = []
 
     const items = await page.$$(selector)
     for (const item of items) {
         const title = await item.$eval("a", (a) => a.title)
         const url = await item.$eval("a", (a) => a.href)
-        const img = await item.$eval("img", (img) => img.src);
-        data.push({ title, img, url });
+        const thumbnail = await item.$eval("img", (img) => img.src);
+        data.push({ title, thumbnail, url });
     }
-
-    await page.close()
 
     return Promise.resolve(data)
 
 }
 
 export async function getMangaAsurascans(
-    browser: Browser,
+    page: Page,
     url: string,
 ) {
-    const page = await browser.newPage()
     await page.goto(url)
     await page.waitForSelector('div.bixbox.animefull')
     await page.waitForSelector('div.bixbox.bxcl.epcheck')
@@ -83,57 +86,55 @@ export async function getMangaAsurascans(
     let genres = await genreSpan.$$eval('a', a => a.map(s => s.innerHTML))
 
     let thumbnail = await thumbnailDiv.$eval('.thumb img', (img) => img.src);
-    let rating = await bigContentDiv.$eval('.num', (num) => num.innerHTML);
+    let rating: number = +(await bigContentDiv.$eval('.num', (num) => num.innerHTML))
     let [status, type] = await Promise.all([
         bigContentDiv.$eval('.imptdt i', (i) => i.innerText),
         bigContentDiv.$eval('.imptdt a', (a) => a.innerText)
     ]);
 
-    const chapters: { chapterTitle: string, chapterUrl: string }[] = []
+    let statusMultiple = [status]
+
+    const chapters: ChapterModel[] = []
 
     const chaptersLi = await page.$$('.bixbox.bxcl.epcheck .eplister .clstyle li')
     for (const li of chaptersLi) {
         const chapterTitle = "Chapter " + await li.evaluate((el) => el.getAttribute('data-num'))
         const chapterUrl = await li.$eval('.chbox .eph-num a', a => a.href)
-        chapters.push({ chapterTitle, chapterUrl })
+        chapters.push({
+            title: chapterTitle,
+            url: chapterUrl
+        })
     }
 
-    let data = {
+    let data: MangaDetailModel = {
         cover: bigCover,
         thumbnail,
         title,
         altTitles,
         description,
         rating,
-        status,
+        status: statusMultiple,
         type,
         genres,
-        chapters,
+        chapters
     }
-
-    await page.close()
 
     return Promise.resolve(data)
 
 }
 
 export async function getChapterAsurascans(
-    browser: Browser,
+    page: Page,
     url: string,
 ) {
-    const page = await browser.newPage()
     await page.goto(url)
     await page.waitForSelector('div#readerarea.rdminimal')
 
-    const chapterPages = await page.$$eval('.rdminimal p img', (elements) => {
+    const pages = await page.$$eval('.rdminimal p img', (elements) => {
         return elements.map(el => el.src)
     })
 
-    let data = {
-        data: chapterPages
-    }
-
-    await page.close()
+    let data: PageModel = { pages }
 
     return Promise.resolve(data)
 

@@ -1,5 +1,6 @@
 import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
 import { AsurascansService } from './asurascans.service';
+import { AsurascansMangaDto } from './dto';
 
 @Controller('asurascans')
 export class AsurascansController {
@@ -9,25 +10,17 @@ export class AsurascansController {
     ) { }
 
     @Get('popular')
-    async getHomePage() {
+    async getPopular() {
         return this.service.getPopular()
-    }
-
-    @Get(':pageNumber')
-    async getPage(
-        @Param('pageNumber', ParseIntPipe) pageNumber: number
-    ) {
-        return this.service.getPage(pageNumber)
     }
 
     @Get()
     async getManga(
-        @Query('manga') manga: string,
-        @Query('chapter') chapter: string
+        @Query() { manga, chapter, page, query }: AsurascansMangaDto,
     ) {
         if (manga) return this.service.getManga(manga)
         if (chapter) return this.service.getChapter(chapter)
-        return this.getPage(1)
+        return this.service.getLatest(query, page)
     }
 
 }
