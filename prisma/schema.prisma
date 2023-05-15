@@ -8,43 +8,45 @@ datasource db {
 }
 
 model User {
-    id         Int                 @id @default(autoincrement())
-    email      String              @unique
-    hash       String
-    firstName  String              @default("")
-    lastName   String              @default("")
-    categories UsersOnCategories[]
-    createdAt  DateTime            @default(now())
-    updatedAt  DateTime            @updatedAt
+    id               Int                 @id @default(autoincrement())
+    email            String              @unique
+    hash             String
+    firstName        String              @default("")
+    lastName         String              @default("")
+    UserOnCategories UsersOnCategories[]
+    createdAt        DateTime            @default(now())
+    updatedAt        DateTime            @updatedAt
 
     @@map("users")
 }
 
 model Category {
-    id          Int                 @id @default(autoincrement())
-    title       String              @default("")
-    description String              @default("")
-    users       UsersOnCategories[]
-    createdAt   DateTime            @default(now())
-    updatedAt   DateTime            @updatedAt
+    id                Int                 @id @default(autoincrement())
+    title             String              @default("")
+    description       String              @default("")
+    UserOnCategories  UsersOnCategories[]
+    MangaOnCategories MangaOnCategories[]
+    createdAt         DateTime            @default(now())
+    updatedAt         DateTime            @updatedAt
 
     @@map("categories")
 }
 
 model Manga {
-    id          Int      @id @default(autoincrement())
-    url         String   @unique @default("")
-    cover       String   @default("")
-    thumbnail   String   @default("")
-    title       String   @default("")
-    altTitles   String[] @default([])
-    description String   @default("")
-    rating      Float?
-    status      String   @default("")
-    type        String   @default("")
-    genres      String[] @default([])
-    createdAt   DateTime @default(now())
-    updatedAt   DateTime @updatedAt
+    id                Int                 @id @default(autoincrement())
+    url               String              @unique @default("")
+    cover             String              @default("")
+    thumbnail         String              @default("")
+    title             String              @default("")
+    altTitles         String[]            @default([])
+    description       String              @default("")
+    rating            Float?
+    status            String              @default("")
+    type              String              @default("")
+    genres            String[]            @default([])
+    createdAt         DateTime            @default(now())
+    updatedAt         DateTime            @updatedAt
+    MangaOnCategories MangaOnCategories[]
 }
 
 model Chapter {
@@ -61,4 +63,13 @@ model UsersOnCategories {
     Category   Category @relation(fields: [categoryId], references: [id])
 
     @@id([userId, categoryId])
+}
+
+model MangaOnCategories {
+    mangaId    Int
+    categoryId Int
+    Manga      Manga    @relation(fields: [mangaId], references: [id])
+    Category   Category @relation(fields: [categoryId], references: [id])
+
+    @@id([mangaId, categoryId])
 }
