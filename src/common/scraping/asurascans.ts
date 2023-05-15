@@ -8,6 +8,7 @@ export enum AsurascansSelector {
     // homepage
     POPULAR = `.bixbox.hothome .bs`,
     LASTEST = `.bixbox:last-of-type .utao`,
+    SEARCH = `.bixbox .bs`
 }
 
 export async function getPageAsurascans(
@@ -17,7 +18,10 @@ export async function getPageAsurascans(
     pageNumber: number = 1,
 ) {
     let url = `${BASE_URL}/page/${pageNumber}/`
-    if (!isEmptyOrSpaces(query)) url = `${BASE_URL}/page/${pageNumber}/?s=${query}`
+    if (!isEmptyOrSpaces(query)) {
+        selector = AsurascansSelector.SEARCH
+        url = `${BASE_URL}/page/${pageNumber}/?s=${query}`
+    }
 
     await page.goto(url)
     await page.waitForSelector('.bixbox')
